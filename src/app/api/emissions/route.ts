@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 export type TransportMode = 'air' | 'sea' | 'road' | 'rail';
 
 /**
- * Emission factor activity_ids for Climatiq /estimate endpoint
- * Reference: https://www.postman.com/climatiq/climatiq/request/s0a7p87/with-activity-id
+ * Emission factor activity_ids from Climatiq /data/v1/search
+ * Verified against /estimate with data_version ^6
+ * Unit type: WeightOverDistance (weight in tonnes, distance in km)
  */
 export const EMISSION_FACTOR_IDS: Record<TransportMode, string> = {
-  air: 'freight_flight-route_type_na',
-  sea: 'freight_sea-vessel_type_na',
-  road: 'freight_vehicle-vehicle_type_hgv-fuel_source_na-distance_na-weight_or_capacity_na',
-  rail: 'freight_train-route_type_na',
+  air: 'freight_flight-route_type_domestic-distance_na-weight_na-rf_included-method_na-aircraft_type_na-distance_uplift_na',
+  sea: 'sea_freight-vessel_type_container-route_type_deep_sea_average-vessel_length_na-tonnage_na-fuel_source_na-load_type_na-distance_uplift_na',
+  road: 'freight_vehicle-vehicle_type_light_delivery-fuel_source_petrol-vehicle_weight_na-percentage_load_na',
+  rail: 'freight_train-route_type_na-fuel_type_na-load_type_na-train_type_operation',
 };
-
 
 /**
  * POST /api/emissions
  * Calls Climatiq /estimate with activity_id selector
+ * Unit type: WeightOverDistance — needs weight in tonnes and distance in km
  * Reference: https://www.postman.com/climatiq/climatiq/request/s0a7p87/with-activity-id
  */
 export async function POST(request: NextRequest) {
@@ -51,16 +51,18 @@ export async function POST(request: NextRequest) {
     }
 
     const activityId = EMISSION_FACTOR_IDS[normalizedMode];
+    const weightTonnes = weight / 1000; 
+    const distanceKm = 1000;
 
     const climatiqPayload = {
       emission_factor: {
         activity_id: activityId,
-        data_version: '^21',
+        data_version: '^6',
       },
       parameters: {
-        weight: weight,
-        distance: 1000,
-        weight_unit: 'kg',
+        weight: weightTonnes,
+        distance: distanceKm,
+        weight_unit: 't',
         distance_unit: 'km',
       },
     };
