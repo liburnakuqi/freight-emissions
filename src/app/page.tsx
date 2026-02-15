@@ -4,20 +4,40 @@ import { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import PreviewTable from './components/PreviewTable';
 import Alert from './components/Alert';
+import { parseCSV, ShipmentRow } from './lib/csvParser';
+import { validateAll, ValidationError } from './lib/validation';
 
 export default function Home() {
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showTable, setShowTable] = useState(false);
+  const [csvData, setCsvData] = useState<ShipmentRow[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   const handleFileSelect = async (file: File) => {
     console.log('File selected:', file.name, file.size, 'bytes');
     
-    setAlert({ message: `CSV uploaded: ${file.name}`, type: 'success' });
-    setShowTable(true);
-    
-    setTimeout(() => {
-      setAlert(null);
-    }, 5000);
+    try {
+      const data = await parseCSV(file);
+      setCsvData(data);
+      
+      const errors = validateAll(data);
+      setValidationErrors(errors);
+      
+      setAlert({ 
+        message: `CSV uploaded: ${file.name} ${data.length} rows${errors.length > 0 ? ` ${errors.length} errors found` : ' All valid'}`,
+        type: errors.length > 0 ? 'error' : 'success' 
+      });
+      setShowTable(true);
+      
+      setTimeout(() => {
+        setAlert(null);
+      }, 5000);
+    } catch (error: any) {
+      setAlert({ message: `Error parsing CSV: ${error.message}`, type: 'error' });
+      setShowTable(false);
+      setCsvData([]);
+      setValidationErrors([]);
+    }
   };
 
   return (
@@ -76,9 +96,21 @@ export default function Home() {
                 </div>
               )}
             </div>
-            {showTable && (
+            {showTable && csvData.length > 0 && (
               <div className="mt-10 w-full">
-                <PreviewTable />
+                {validationErrors.length > 0 && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h3 className="text-sm font-semibold text-red-800 mb-2">Validation Issues ({validationErrors.length}):</h3>
+                    <ul className="text-xs text-red-700 space-y-1 max-h-32 overflow-y-auto">
+                      {validationErrors.map((error, idx) => (
+                        <li key={idx}>
+                          Row {error.row + 1}, {error.field}: {error.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <PreviewTable data={csvData} errors={validationErrors} />
               </div>
             )}
           </div>

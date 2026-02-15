@@ -11,9 +11,6 @@ export default function FileUpload({ onFileSelect }: { onFileSelect: (file: File
 
   return (
     <div className="col-span-full">
-      <label htmlFor="file-upload" className="block text-sm/6 font-medium text-gray-900">
-        Upload CSV File
-      </label>
       <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
         <div className="text-center">
           <svg
