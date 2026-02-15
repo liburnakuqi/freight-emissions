@@ -2,17 +2,22 @@
 
 import { useState } from 'react';
 import FileUpload from './components/FileUpload';
+import PreviewTable from './components/PreviewTable';
+import Alert from './components/Alert';
 
 export default function Home() {
-  const [fileName, setFileName] = useState('');
-  const [fileContent, setFileContent] = useState('');
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showTable, setShowTable] = useState(false);
 
   const handleFileSelect = async (file: File) => {
-    setFileName(file.name);
     console.log('File selected:', file.name, file.size, 'bytes');
     
-    const text = await file.text();
-    setFileContent(text);
+    setAlert({ message: `CSV uploaded: ${file.name}`, type: 'success' });
+    setShowTable(true);
+    
+    setTimeout(() => {
+      setAlert(null);
+    }, 5000);
   };
 
   return (
@@ -46,7 +51,7 @@ export default function Home() {
           ></div>
         </div>
         
-        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+        <div className="mx-auto max-w-7xl py-32 sm:py-48 lg:py-56">
           <div className="text-center">
             <div className="hidden sm:mb-8 sm:flex sm:justify-center">
               <div className="relative rounded-full px-3 py-1 text-sm/6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
@@ -61,24 +66,21 @@ export default function Home() {
             </p>
             <div className="mt-10 max-w-2xl mx-auto">
               <FileUpload onFileSelect={handleFileSelect} />
-              {fileName && (
-                <div className="mt-4 space-y-4">
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-sm text-green-800">
-                      File uploaded: <span className="font-mono font-semibold">{fileName}</span>
-                    </p>
-                  </div>
-                  {fileContent && (
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
-                      <p className="text-xs font-semibold text-gray-700 mb-2">File Contents:</p>
-                      <pre className="text-xs text-gray-600 overflow-auto max-h-64 font-mono whitespace-pre-wrap">
-                        {fileContent}
-                      </pre>
-                    </div>
-                  )}
+              {alert && (
+                <div className="mt-4">
+                  <Alert 
+                    message={alert.message} 
+                    type={alert.type}
+                    onDismiss={() => setAlert(null)}
+                  />
                 </div>
               )}
             </div>
+            {showTable && (
+              <div className="mt-10 w-full">
+                <PreviewTable />
+              </div>
+            )}
           </div>
         </div>
 
