@@ -12,19 +12,22 @@ export default function Home() {
   const [showTable, setShowTable] = useState(false);
   const [csvData, setCsvData] = useState<ShipmentRow[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [totalRows, setTotalRows] = useState<number>(0);
 
   const handleFileSelect = async (file: File) => {
     console.log('File selected:', file.name, file.size, 'bytes');
     
     try {
-      const data = await parseCSV(file);
-      setCsvData(data);
+      const result = await parseCSV(file);
+      setCsvData(result.rows);
+      setTotalRows(result.totalRows);
       
-      const errors = validateAll(data);
+      const errors = validateAll(result.rows);
       setValidationErrors(errors);
       
+      const previewNote = result.totalRows > 100 ? ` (showing first 100 of ${result.totalRows})` : '';
       setAlert({ 
-        message: `CSV uploaded: ${file.name} ${data.length} rows${errors.length > 0 ? ` ${errors.length} errors found` : ' All valid'}`,
+        message: `CSV uploaded: ${file.name} • ${result.rows.length} rows${previewNote}${errors.length > 0 ? ` • ${errors.length} errors found` : ' • All valid'}`,
         type: errors.length > 0 ? 'error' : 'success' 
       });
       setShowTable(true);
@@ -37,6 +40,7 @@ export default function Home() {
       setShowTable(false);
       setCsvData([]);
       setValidationErrors([]);
+      setTotalRows(0);
     }
   };
 
@@ -48,16 +52,6 @@ export default function Home() {
             <a href="#" className="-m-1.5 p-1.5">
               <span className="sr-only">Freight Emissions Calculator</span>
               <span className="text-2xl font-bold text-indigo-600">Freight Emissions</span>
-            </a>
-          </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            <a href="#" className="text-sm/6 font-semibold text-gray-900">Product</a>
-            <a href="#" className="text-sm/6 font-semibold text-gray-900">Features</a>
-            <a href="#" className="text-sm/6 font-semibold text-gray-900">Documentation</a>
-          </div>
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <a href="/api/emissions/test" target="_blank" className="text-sm/6 font-semibold text-gray-900">
-              Test API <span aria-hidden="true">&rarr;</span>
             </a>
           </div>
         </nav>
@@ -98,6 +92,13 @@ export default function Home() {
             </div>
             {showTable && csvData.length > 0 && (
               <div className="mt-10 w-full">
+                {totalRows > 100 && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Preview:</strong> Showing first 100 rows of {totalRows} total rows
+                    </p>
+                  </div>
+                )}
                 {validationErrors.length > 0 && (
                   <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                     <h3 className="text-sm font-semibold text-red-800 mb-2">Validation Issues ({validationErrors.length}):</h3>

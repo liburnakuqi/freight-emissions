@@ -37,9 +37,15 @@ export function validateRow(row: ShipmentRow, index: number): ValidationError[] 
 export function validateAll(rows: ShipmentRow[]): ValidationError[] {
   const allErrors: ValidationError[] = [];
   
+  if (!rows || !Array.isArray(rows)) {
+    return allErrors;
+  }
+  
   rows.forEach((row, index) => {
-    const errors = validateRow(row, index);
-    allErrors.push(...errors);
+    if (row) {
+      const errors = validateRow(row, index);
+      allErrors.push(...errors);
+    }
   });
 
   return allErrors;
