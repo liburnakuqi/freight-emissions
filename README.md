@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Freight Emissions Calculator
 
-## Getting Started
+A web application for calculating CO₂e emissions from freight shipments using the Climatiq API.
 
-First, run the development server:
+## Quick Start
 
+1. **Install dependencies:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Create `.env.local`:**
+```env
+CLIMATIQ_API_KEY=your_api_key_here
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Run:**
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Open:** [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+## Features Implemented
 
-To learn more about Next.js, take a look at the following resources:
+**CSV Upload & Parsing**
+- Drag-and-drop file upload
+- Automatic header detection
+- Preview up to 100 rows
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Data Validation**
+- Validates all required fields (shipment_id, addresses, mode, weight)
+- Inline error highlighting
+- Validation summary panel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Emissions Processing**
+- Full Climatiq API integration
+- All 4 transport modes (air, sea, road, rail)
+- Per-row status tracking with progress indicator
+- Real-time CO₂e calculations
 
-## Deploy on Vercel
+**Export**
+- CSV export with original data + emissions + status + errors
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+├── api/emissions/
+│   ├── route.ts              # POST /api/emissions - Main endpoint
+│   └── factors/route.ts      # GET /api/emissions/factors - Discovery tool
+├── components/
+│   ├── FileUpload.tsx
+│   ├── PreviewTable.tsx
+│   ├── StatusBadge.tsx
+│   └── Alert.tsx
+├── lib/
+│   ├── api/calculateEmissions.ts
+│   ├── csvParser.ts
+│   ├── csvExport.ts
+│   └── validation.ts
+└── page.tsx
+```
+
+## CSV Format
+
+```csv
+shipment_id,origin_address,destination_address,mode,weight_kg
+SHIP001,"123 Main St, City, Country","456 Oak Ave, City, Country",air,1000.5
+```
+
+**Required columns:** `shipment_id`, `origin_address`, `destination_address`, `mode` (air/sea/road/rail), `weight_kg` (> 0)
+
+## API Endpoints
+
+### `POST /api/emissions`
+Calculate emissions for a shipment.
+
+**Request:**
+```json
+{
+  "origin_address": "123 Main St",
+  "destination_address": "456 Oak Ave",
+  "mode": "air",
+  "weight_kg": 1000
+}
+```
+
+### `GET /api/emissions/factors`
+Discovery tool to find valid Climatiq `activity_id` values.
+
+## Known Limitations
+
+- Distance hardcoded to 1000 km (geocoding not implemented)
+- Results UI (sorting, filtering, summary) not yet implemented
+- Inline editing not available (must fix CSV and re-upload)
+
+## Documentation
+
+See **[SUBMISSION.md](./SUBMISSION.md)** for detailed explanation of implementation, decisions, and trade-offs.
+
+## Tech Stack
+
+- Next.js 14+ (App Router)
+- TypeScript
+- Tailwind CSS
+- PapaParse (CSV parsing)
+- Climatiq API
